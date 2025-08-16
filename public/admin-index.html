@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Home</title>
+    <link
+      rel="stylesheet"
+      href="../node_modules/bootstrap/dist/css/bootstrap.css"
+    />
+    <link
+      rel="stylesheet"
+      href="../node_modules/bootstrap-icons/font/bootstrap-icons.css"
+    />
+    <style>
+      header {
+        background-image: url("../public/images/tech.gif");
+        background-size: cover;
+        height: 100px;
+      }
+    </style>
+    <script src="../node_modules/jquery/dist/jquery.js"></script>
+    <script src="../node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
+    <script>
+      function loadpage(pageName) {
+        // debugger;
+        $.ajax({
+          method: "get",
+          url: pageName,
+          success: (response) => {
+            $("section").html(response);
+          },
+        });
+      }
+      $(function () {
+        $("#btnSignIn").click(() => {
+          loadpage("user-login.html");
+        });
+        function loadvideos() {
+          $("section").html("");
+          $.ajax({
+            method: "get",
+            url: "http://127.0.0.1:4400/getvideos",
+            success: (videos) => {
+              videos.map((video) => {
+                $(`<tr>
+<td>${video.Title}</td>
+<td><iframe src=${video.Url} width="200" height="100"></iframe></td>
+<td>
+<button id="btnEdit" name=${video.VideoId} class="btn btn-warning bi
+bi-pen-fill"></button>
+<button id="btnDelete" name=${video.VideoId} class="btn btn-danger bi
+bi-trash-fill"></button>
+</td>
+</tr>`).appendTo("tbody");
+              });
+            },
+          });
+        }
+        function loadCategories() {
+          //debugger;
+          $.ajax({
+            method: "get",
+            url: "http://127.0.0.1:4400/getcategories",
+            success: (categories) => {
+              categories.map((category) => {
+                $(
+                  `<option value=${category.CategoryId}>${category.CategoryName}</option>`
+                ).appendTo("#lstcategories");
+              });
+            },
+          });
+        }
+        $(document).on("click", "#btnlogin", () => {
+          $.ajax({
+            method: "get",
+            url: "http://127.0.0.1:4400/getadmin",
+            success: (users) => {
+              var user = users.find(
+                (admin) => admin.UserId == $("#LoginUserId").val()
+              );
+              if (
+                user.UserId == $("#LoginUserId").val() &&
+                user.Password == $("#LoginPassword").val()
+              ) {
+                $("#btnSignIn").html(`${user.UserName} - Signout`);
+                loadpage("admin-dashboard.html");
+                loadvideos();
+              } else {
+                alert("Invalid Admin Details");
+              }
+            },
+          });
+
+          //add new videos
+          $(document).on("click", "#btnaddnew", () => {
+            loadpage(`admin-add-video.html`);
+            loadCategories();
+          });
+
+          //add new videos
+          $(document).on("click", "#btnAddvideo", () => {
+            var video = {
+              VideoId: $("#Videoid").val(),
+              Title: $("#Title").val(),
+              Url: $("#Url").val(),
+              Likes: $("#Likes").val(),
+              Views: $("#Views").val(),
+              CategoryId: $("#lstcategories").val(),
+            };
+            $.ajax({
+              method: "post",
+              url: "http://127.0.0.1:4400/addvideo",
+              data: video,
+            });
+            alert("video added successfully");
+            loadpage("admin-dashboard.html");
+            loadvideos();
+          });
+        });
+
+        // Edit Sections
+        //Edit video
+        let id;
+        $(document).on("click", "#btnEdit", (e) => {
+          console.log(e);
+          loadCategories();
+          loadpage("admin-edit-video.html");
+          id = parseInt(e.target.name);
+          console.log(id);
+          $.ajax({
+            method: `get`,
+            url: `http://127.0.0.1:4400/getvideos`,
+            success: (videos) => {
+              debugger;
+              let video = videos.filter((item) => {
+                return item.VideoId == id;
+              });
+              console.log(video);
+              $("#Videoid").val(video[0].VideoId);
+              $("#Title").val(video[0].Title);
+              $("#Url").val(video[0].Url);
+              $("#Likes").val(video[0].Likes);
+              $("#Views").val(video[0].Views);
+              $("#lstcategories").val(video[0].CategoryId);
+            },
+          });
+        });
+        $(document).on("click", "#btnCancel", () => {
+          loadpage("admin-dashboard.html");
+          loadvideos();
+        });
+
+        // Update video
+        $(document).on("click", "#btnUpdateVideo", () => {
+          debugger;
+          var video = {
+            VideoId: $("#Videoid").val(),
+            Title: $("#Title").val(),
+            Url: $("#Url").val(),
+            Likes: $("#Likes").val(),
+            Views: $("#Views").val(),
+            CategoryId: $("#lstcategories").val(),
+          };
+          $.ajax({
+            method: "put",
+            url: `http://127.0.0.1:4400/updateVideo/${id}`,
+            data: video,
+          });
+          alert("video update ..");
+          loadpage("admin-dashboard.html");
+          loadvideos();
+        });
+        $(document).on("click", "#btnDelete", (e) => {
+          var id = parseInt(e.target.name);
+          var flag = confirm("are you sure?");
+          if (flag == true) {
+            $.ajax({
+              method: "delete",
+              url: `http://127.0.0.1:4400/deleteVideo/${id}`,
+            });
+            alert("video delete successfully ..");
+            loadpage("admin-dashboard.html");
+            loadvideos();
+          }
+        });
+      });
+    </script>
+  </head>
+  <body class="container-fluid">
+    <header
+      class="d-flex justify-content-between align-items-center p-2 text-white"
+    >
+      <h1
+        style="
+          color: white;
+          font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial,
+            sans-serif;
+        "
+      >
+        Video Tutorial
+      </h1>
+      <h2
+        style="
+          color: white;
+          font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial,
+            sans-serif;
+        "
+      >
+        Admin Home
+      </h2>
+      <button class="bi bi-person-fill btn btn-light" id="btnSignIn">
+        sign in
+      </button>
+    </header>
+    <section></section>
+  </body>
+</html>

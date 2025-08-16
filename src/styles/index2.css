@@ -1,0 +1,21 @@
+body{
+background-color: black;
+} 
+header{
+background-image: url(../../public/images/tech1.jpg);
+background-size: cover;
+height: 650px;
+padding: 8px;} 
+section{
+display: grid;
+grid-template-columns: 3fr 3fr 3fr 3fr;
+height: 300px;
+z-index: 2;
+margin-top: -250px;
+} 
+.box{
+box-shadow: 2px 2px 2px white;
+height: 300px;
+display: flex;
+flex-direction: column;
+justify-content: space-between;}
